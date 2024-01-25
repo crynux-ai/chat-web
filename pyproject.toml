@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crynux_chat"
+authors = [{ name = "aaronyuai", email = "c@crynux.ai" }]
+description = "Web application for crynux gpt task"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = ["Programming Language :: Python :: 3"]
+version = "0.0.1"
+dependencies = [
+    "gradio",
+    "requests",
+    "pydantic",
+    "pydantic-settings"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gpt_task*"]

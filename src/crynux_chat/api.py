@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import uuid
 from io import BytesIO
 from typing import Any, BinaryIO, Dict, List
 
@@ -65,7 +66,7 @@ def run_gpt_task(
     seed: int,
     task_timeout: int = 600
 ) -> str:
-    client_id = "abcd"
+    client_id = str(uuid.uuid4())
 
     # create task
     task_args = {

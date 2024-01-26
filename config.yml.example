@@ -1,0 +1,10 @@
+log:
+  level: INFO
+  dir: logs
+
+port: 7890
+bridge_url: "https://api_ig.crynux.ai"
+task_timeout: 600
+models:
+  - "gpt2"
+  - "mistralai/Mistral-7B-v0.1"

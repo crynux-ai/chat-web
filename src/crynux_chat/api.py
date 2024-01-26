@@ -1,14 +1,16 @@
 import json
 import time
+import logging
 from typing import Any, Dict, List, BinaryIO
 from io import BytesIO
 
 import requests
 
-from .args import GenerationConfig, Message, GPTTaskResponse
+from .models import GenerationConfig, Message, GPTTaskResponse, TaskStatus
 
 __all__ = ["run_gpt_task"]
 
+_logger = logging.getLogger(__name__)
 
 def create_task(
     url: str, client_id: str, task_args: Dict[str, Any], task_type: int
@@ -30,14 +32,14 @@ def create_task(
         return task_id
 
 
-def get_task_status(url: str, client_id: str, task_id: int) -> int:
+def get_task_status(url: str, client_id: str, task_id: int) -> TaskStatus:
     with requests.get(f"{url}/v1/inference_tasks/{client_id}/{task_id}") as resp:
         resp.raise_for_status()
 
         resp_json = resp.json()
         status = resp_json["data"]["status"]
 
-        return status
+        return TaskStatus(status)
 
 
 def get_task_result(url: str, client_id: str, task_id: int, dst: BinaryIO):
@@ -69,24 +71,24 @@ def run_gpt_task(
     task_type = 1
 
     task_id = create_task(url, client_id, task_args, task_type)
-    print(f"create task {task_id} success")
+    logging.info(f"create task {task_id} success")
 
     # check task status
     while True:
         status = get_task_status(url, client_id, task_id)
-        print(f"task status: {status}")
-        if status == 6:
+        logging.debug(f"task {task_id} status: {status}")
+        if status == TaskStatus.TaskSuccess:
             break
         time.sleep(1)
 
-    print("task success")
+    logging.info(f"task {task_id} success")
 
     # download result file
     with BytesIO() as dst:
         get_task_result(url, client_id, task_id, dst)
 
         resp: GPTTaskResponse = json.loads(dst.getvalue())
-    print("download result file success")
+    logging.info(f"get task {task_id} result success")
 
     assert len(resp["choices"]) > 0
     return resp["choices"][0]["message"]["content"]

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Tuple, Type
+from typing import Any, Dict, List, Tuple, Type, Literal
 
 import yaml
+from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 from pydantic_settings import (BaseSettings, PydanticBaseSettingsSource,
                                SettingsConfigDict)
@@ -63,7 +64,17 @@ class YamlConfigSettingsSource(PydanticBaseSettingsSource):
         return d
 
 
+LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "CRITICAL"]
+
+
+class LogConfig(BaseModel):
+    dir: str
+    level: LogLevel
+
+
 class Config(BaseSettings):
+    log: LogConfig
+
     port: int
     bridge_url: str
     models: List[str]

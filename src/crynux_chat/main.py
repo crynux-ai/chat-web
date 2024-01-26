@@ -3,8 +3,9 @@ from typing import List, Tuple
 import gradio as gr
 
 from .api import run_gpt_task
-from .args import GenerationConfig, Message
+from .models import GenerationConfig, Message
 from .config import get_config
+from .log import init as log_init
 
 
 class Server(object):
@@ -99,6 +100,7 @@ class Server(object):
 
 def main():
     config = get_config()
+    log_init(config=config)
     server = Server(
         port=config.port, bridge_url=config.bridge_url, models=config.models
     )

@@ -1,11 +1,15 @@
+import logging
 from typing import List, Tuple
 
 import gradio as gr
 
 from .api import run_gpt_task
 from .config import get_config
+from .error import TaskError
 from .log import init as log_init
 from .models import GenerationConfig, Message
+
+_logger = logging.getLogger(__name__)
 
 
 class Server(object):
@@ -47,14 +51,20 @@ class Server(object):
             "top_k": top_k,
         }
 
-        res = run_gpt_task(
-            url=self.bridge_url,
-            model=model,
-            messages=messages,
-            generation_config=generation_config,
-            seed=seed,
-            task_timeout=self.task_timeout,
-        )
+        try:
+            res = run_gpt_task(
+                url=self.bridge_url,
+                model=model,
+                messages=messages,
+                generation_config=generation_config,
+                seed=seed,
+                task_timeout=self.task_timeout,
+            )
+        except TaskError as e:
+            raise gr.Error(e.msg)
+        except Exception as e:
+            _logger.exception(e)
+            raise gr.Error("unexpected error")
         return res
 
     def launch(self):
@@ -100,7 +110,12 @@ class Server(object):
                         additional_inputs_accordion_name="generation config",
                     )
 
-        demo.launch(share=False, inbrowser=True, server_port=self.port, favicon_path="assets/favicon.ico")
+        demo.launch(
+            share=False,
+            inbrowser=True,
+            server_port=self.port,
+            favicon_path="assets/favicon.ico",
+        )
 
 
 def main():

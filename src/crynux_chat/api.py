@@ -1,12 +1,13 @@
 import json
-import time
 import logging
-from typing import Any, Dict, List, BinaryIO
+import time
 from io import BytesIO
+from typing import Any, BinaryIO, Dict, List
 
 import requests
 
-from .models import GenerationConfig, Message, GPTTaskResponse, TaskStatus
+from .error import TaskError
+from .models import GenerationConfig, GPTTaskResponse, Message, TaskStatus
 
 __all__ = ["run_gpt_task"]
 
@@ -37,9 +38,13 @@ def get_task_status(url: str, client_id: str, task_id: int) -> TaskStatus:
         resp.raise_for_status()
 
         resp_json = resp.json()
-        status = resp_json["data"]["status"]
+        status = TaskStatus(resp_json["data"]["status"])
 
-        return TaskStatus(status)
+        if status == TaskStatus.TaskAborted:
+            reason = resp_json["data"]["abort_reason"]
+            _logger.error(f"Task {task_id} aborted for {reason}")
+        
+        return status
 
 
 def get_task_result(url: str, client_id: str, task_id: int, dst: BinaryIO):
@@ -72,25 +77,32 @@ def run_gpt_task(
     task_type = 1
 
     task_id = create_task(url, client_id, task_args, task_type)
-    logging.info(f"create task {task_id} success")
+    _logger.info(f"create task {task_id} success")
 
     # check task status
     deadline = time.time() + task_timeout
+    status = TaskStatus.TaskPending
     while time.time() < deadline:
         status = get_task_status(url, client_id, task_id)
-        logging.debug(f"task {task_id} status: {status}")
+        _logger.debug(f"task {task_id} status: {status}")
         if status == TaskStatus.TaskSuccess:
             break
+        elif status == TaskStatus.TaskAborted:
+            raise TaskError("Task aborted")
         time.sleep(1)
 
-    logging.info(f"task {task_id} success")
+    if status != TaskStatus.TaskSuccess:
+        _logger.error(f"task {task_id} timeout")
+        raise TaskError(f"Task timeout")
+
+    _logger.info(f"task {task_id} success")
 
     # download result file
     with BytesIO() as dst:
         get_task_result(url, client_id, task_id, dst)
 
         resp: GPTTaskResponse = json.loads(dst.getvalue())
-    logging.info(f"get task {task_id} result success")
+    _logger.info(f"get task {task_id} result success")
 
     assert len(resp["choices"]) > 0
     return resp["choices"][0]["message"]["content"]

@@ -68,7 +68,7 @@ class Server(object):
         return res
 
     def launch(self):
-        with gr.Blocks(title="Crynux", css="footer{display:none !important}") as demo:
+        with gr.Blocks(title="Crynux", css="footer{display:none !important}", analytics_enabled=False) as demo:
             gr.HTML("""<h1 align="center">Crynux chat</h1>""")
 
             with gr.Row():

@@ -58,6 +58,7 @@ def run_gpt_task(
     messages: List[Message],
     generation_config: GenerationConfig,
     seed: int,
+    task_timeout: int = 600
 ) -> str:
     client_id = "abcd"
 
@@ -74,7 +75,8 @@ def run_gpt_task(
     logging.info(f"create task {task_id} success")
 
     # check task status
-    while True:
+    deadline = time.time() + task_timeout
+    while time.time() < deadline:
         status = get_task_status(url, client_id, task_id)
         logging.debug(f"task {task_id} status: {status}")
         if status == TaskStatus.TaskSuccess:

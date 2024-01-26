@@ -3,16 +3,20 @@ from typing import List, Tuple
 import gradio as gr
 
 from .api import run_gpt_task
-from .models import GenerationConfig, Message
 from .config import get_config
 from .log import init as log_init
+from .models import GenerationConfig, Message
 
 
 class Server(object):
-    def __init__(self, port: int, bridge_url: str, models: List[str]) -> None:
+    def __init__(
+        self, port: int, bridge_url: str, models: List[str], task_timeout: int = 600
+    ) -> None:
         self.port = port
         self.bridge_url = bridge_url
         self.models = models
+
+        self.task_timeout = task_timeout
 
     def chat(
         self,
@@ -49,6 +53,7 @@ class Server(object):
             messages=messages,
             generation_config=generation_config,
             seed=seed,
+            task_timeout=self.task_timeout,
         )
         return res
 
@@ -102,7 +107,10 @@ def main():
     config = get_config()
     log_init(config=config)
     server = Server(
-        port=config.port, bridge_url=config.bridge_url, models=config.models
+        port=config.port,
+        bridge_url=config.bridge_url,
+        models=config.models,
+        task_timeout=config.task_timeout,
     )
     server.launch()
 

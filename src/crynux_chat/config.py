@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Tuple, Type, Literal
+from typing import Any, Dict, List, Literal, Tuple, Type
 
 import yaml
 from pydantic import BaseModel
@@ -77,6 +77,8 @@ class Config(BaseSettings):
 
     port: int
     bridge_url: str
+    task_timeout: int
+
     models: List[str]
 
     model_config = YamlSettingsConfigDict(

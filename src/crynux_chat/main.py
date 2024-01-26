@@ -58,7 +58,7 @@ class Server(object):
         return res
 
     def launch(self):
-        with gr.Blocks(title="Crynux") as demo:
+        with gr.Blocks(title="Crynux", css="footer{display:none !important}") as demo:
             gr.HTML("""<h1 align="center">Crynux chat</h1>""")
 
             with gr.Row():
@@ -100,7 +100,7 @@ class Server(object):
                         additional_inputs_accordion_name="generation config",
                     )
 
-        demo.launch(share=False, inbrowser=True, server_port=self.port)
+        demo.launch(share=False, inbrowser=True, server_port=self.port, favicon_path="assets/favicon.ico")
 
 
 def main():

@@ -111,7 +111,8 @@ class Server(object):
 
         demo.launch(
             share=False,
-            inbrowser=True,
+            inbrowser=False,
+            server_name="0.0.0.0",
             server_port=self.port,
             favicon_path="assets/favicon.ico",
         )

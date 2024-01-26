@@ -107,7 +107,6 @@ class Server(object):
                             top_p_slider,
                             top_k_slider,
                         ],
-                        additional_inputs_accordion_name="generation config",
                     )
 
         demo.launch(

@@ -14,6 +14,7 @@ __all__ = ["run_gpt_task"]
 
 _logger = logging.getLogger(__name__)
 
+
 def create_task(
     url: str, client_id: str, task_args: Dict[str, Any], task_type: int
 ) -> int:
@@ -44,18 +45,19 @@ def get_task_status(url: str, client_id: str, task_id: int) -> TaskStatus:
         if status == TaskStatus.TaskAborted:
             reason = resp_json["data"]["abort_reason"]
             _logger.error(f"Task {task_id} aborted for {reason}")
-        
+
         return status
 
 
-def get_task_result(url: str, client_id: str, task_id: int, dst: BinaryIO):
+def get_task_result(url: str, client_id: str, task_id: int) -> GPTTaskResponse:
     with requests.get(
-        f"{url}/v1/inference_tasks/{client_id}/{task_id}/images/0", stream=True
+        f"{url}/v1/inference_tasks/{client_id}/gpt/{task_id}/result"
     ) as resp:
         resp.raise_for_status()
 
-        for chunk in resp.iter_content(chunk_size=8192):
-            dst.write(chunk)
+        resp_json = resp.json()
+        data: GPTTaskResponse = resp_json["data"]
+        return data
 
 
 def run_gpt_task(
@@ -64,7 +66,7 @@ def run_gpt_task(
     messages: List[Message],
     generation_config: GenerationConfig,
     seed: int,
-    task_timeout: int = 600
+    task_timeout: int = 600,
 ) -> str:
     client_id = str(uuid.uuid4())
 
@@ -99,10 +101,8 @@ def run_gpt_task(
     _logger.info(f"task {task_id} success")
 
     # download result file
-    with BytesIO() as dst:
-        get_task_result(url, client_id, task_id, dst)
+    resp = get_task_result(url, client_id, task_id)
 
-        resp: GPTTaskResponse = json.loads(dst.getvalue())
     _logger.info(f"get task {task_id} result success")
 
     assert len(resp["choices"]) > 0

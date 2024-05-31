@@ -7,4 +7,4 @@ bridge_url: "https://api_ig.crynux.ai"
 task_timeout: 600
 models:
   - "gpt2"
-  - "mistralai/Mistral-7B-v0.1"
+  - "tiiuae/falcon-7b-instruct"
